@@ -86,6 +86,7 @@ def updateMap(locationData):
         with open(DATA_FILE, 'w') as f:
            json.dump(json.load(response), f, indent=2)
         createPolygons(open("data.json"))
+        print "map updated"
     except URLError, e:
         print 'Got an error code:', e
     
@@ -108,8 +109,8 @@ def main():
                 if(data == "time"):
                     locationData["time"] =  re.split(" ",userInput)[1]
                 elif data == "walk":
-                    strPoint = re.split(" ",userInput)[1]
-                    walk(locationData["lng"],locationData["lat"],float(re.split(",",strPoint)[1]),float(re.split(",",strPoint)[0]),locationData["zoom"])
+                    strValues = re.split(" ",userInput)[1]
+                    walk(locationData["lng"],locationData["lat"],float(re.split(",",strValues)[1]),float(re.split(",",strValues)[0]),int(re.split(",",strValues)[2]))
                 elif data == "example":
                     walk(locationData["lng"],locationData["lat"],-87.8662583951751,42.26833512994285,locationData["zoom"])
                 elif data == "updateMap":
