@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PokeScanner</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+      #legend {
+        background: #FFF;
+        padding: 10px;
+        margin: 5px;
+        font-size: 12px;
+        font-family: Arial, sans-serif;
+        height: 255px;
+        width: 150px;
+      }
+      #legend div {
+       height: 210px;
+       overflow: auto;
+      }
+      #legend li {
+       list-style-type: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="capture"></div>
+    <script>
+      function loadScript(src) {
+        var element = document.createElement("script");
+        element.src = src;
+        document.body.appendChild(element);
+      }
+
+      function getFile(path, asynch, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", path, asynch);
+        xhr.onload = function (e) {
+          if (xhr.readyState === 4) {
+            callback(xhr.responseText);
+          }
+        };
+        xhr.onerror = function (e) {
+          console.error(xhr.status);
+        };
+        xhr.send(null);
+      }
+
+      function cap(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+      }
+
+      function pad(n, width, z) {
+        z = z || '0';
+        n = n + '';
+        return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+      }
+
+      function formatSeconds(s) {
+        var date = new Date(null);
+        date.setSeconds(s);
+
+        return (date.getUTCMinutes() > 0 ? date.getUTCMinutes() + "m " : "") + date.getUTCSeconds() + "s";
+      }
+
+      function getImage(p) {
+        var name = p.name;
+        if (p.name == "Nidoran F") {
+          name = "Nidoran";
+        }
+        else if (name == "Nidoran M") {
+          name = "Nidorano";
+        }
+        else if (p.name == "Mr. Mime") {
+          name = "Mr-Mime";
+        }
+        return "http://icons.iconarchive.com/icons/hektakun/pokemon/72/" + pad(p.id, 3) + "-" + cap(name) + "-icon.png";
+      }
+
+      function toggleLayer(checked, pkmn) {
+        if (checked) {
+            hidden_layers.push(pkmn);
+        } else {
+            var index = hidden_layers.indexOf(pkmn);
+            if(index > -1){
+              hidden_layers.splice(index,1);
+            }
+        }
+        refreshData();
+      };
+
+
+      function refreshData() {
+        getFile("data.json", true, function(response) {
+          console.log("Refreshing data...");
+          var preLength = data.length;
+          data = JSON.parse(response);
+
+          if (preLength != data.length) {
+            // Clear markers
+            for (var i = 0; i < markers.length; i++) {
+              listeners[i].a.remove();
+              listeners[i].b.remove();
+              markers[i].setMap(null);
+            }
+            listeners = [];
+            markers = [];
+
+            // Add updated markers
+            for (var i = 0; i < data.length; i++) {
+              var p = data[i];
+              if (!updated) {
+                map.setZoom(16);
+                map.panTo({lat: p.lat, lng: p.lng});
+                updated = true;
+              }
+
+              if(hidden_layers.indexOf(p.name) == -1){
+                // Pokemon not hidden
+                if(layers.indexOf(p.name) == -1){
+                  layers.push(p.name);
+                }
+                console.log("Adding marker " + p.name);
+
+                var infowindow = new google.maps.InfoWindow({
+                });
+
+                var image = getImage(p);
+
+                var marker = new google.maps.Marker({
+                  map: map,
+                  position: {lat: p.lat, lng: p.lng},
+                  title: "Haunter"
+                });
+                if(i == 1) {
+                var line = [
+                  {lat:data[0].lat,lng:data[0].lng},
+                  {lat:data[0].lat,lng:data[0].lng}]}
+                var poly = new google.maps.Polyline(map: map,path:line)
+                
+
+                var listenerPair = {
+                  a: google.maps.event.addListener(marker, 'mouseover', function() {
+                    infowindow.setContent(this.title);
+                    infowindow.open(map, this);
+                  }),
+
+                  b: google.maps.event.addListener(marker, 'mouseout', function() {
+                    infowindow.close(map, this);
+                  })
+                };
+
+                listeners.push(listenerPair);
+                markers.push(marker);
+              }
+            }
+
+            // Draw layer manager
+            var list = document.getElementById('legend-list');
+            var content = [];
+            for (var id in layers) {
+              var pkmn = layers[id];
+              var checked = hidden_layers.indexOf(pkmn) != -1 ? "checked": "";
+              content.push("<li><input type='checkbox' id='" + pkmn +  "'" +
+              " onclick='toggleLayer(this.checked, this.id)' "+checked+"\/>" +
+              pkmn + "<\/li>");
+            }
+            list.innerHTML = content.join('');
+          }
+        });
+      }
+
+      data = {};
+      map = null;
+      markers = [];
+      listeners = [];
+      hidden_layers = [];
+      layers = [];
+      updated = false;
+
+
+      getFile("config.json", false, function(configData) {
+        config = JSON.parse(configData)
+        console.log("Using api key: " + config.GOOGLE_MAPS_API_KEY);
+        loadScript("https://maps.googleapis.com/maps/api/js?key=" + config.GOOGLE_MAPS_API_KEY + "&libraries=drawing&callback=initMap");
+      });
+
+      function initMap() {
+        console.log("Initializing map");
+
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 0, lng: 0},
+          zoom: 4
+        });
+
+        var legend = document.createElement('div');
+        legend.id = 'legend';
+        var content = [];
+        content.push('<h3>Hide Pokemon</h3>');
+        content.push('<div id="legend-list"></div>');
+        legend.innerHTML = content.join('');
+        legend.index = 1;
+        map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
+
+        setInterval(refreshData, 1000);
+      }
+    </script>
+  </body>
+</html>

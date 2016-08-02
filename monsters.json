@@ -1,0 +1,108 @@
+{"0" : {"name": "defaults",
+        "rarity": 1,
+        "spawnTime":{
+                "time": "12:00:00",
+                "timeImportance": 1},
+        "spawnWeather":{
+                "temperature": 20,
+                "temperatureImportance": 1,
+                "rain": 1,
+                "sun": 1},
+        "spawnLocation":{
+                "height": 300,
+                "heightImportance": 1,
+                "forestImportance": 1,
+                "townImportance": 1,
+                "waterImportance": 1}
+        },
+"1" : {"name": "smallFish",
+        "rarity": 1,
+        "spawnTime":{
+                "time": "12:00:00",
+                "timeImportance": 1},
+        "spawnWeather":{
+                "temperature": 20,
+                "temperatureImportance": 1,
+                "rain": 1,
+                "sun": 1},
+        "spawnLocation":{
+                "height": 300,
+                "heightImportance": 1,
+                "forestImportance": 1,
+                "townImportance": 1,
+                "waterImportance": 90}
+        },
+"2" : {"name": "bigFish",
+        "rarity": 30,
+        "spawnTime":{
+                "time": "12:00:00",
+                "timeImportance": 1},
+        "spawnWeather":{
+                "temperature": 20,
+                "temperatureImportance": 1,
+                "rain": 1,
+                "sun": 1},
+        "spawnLocation":{
+                "height": 300,
+                "heightImportance": 1,
+                "forestImportance": 1,
+                "townImportance": 1,
+                "waterImportance": 95}
+        },
+"3" : {"name": "appleTree",
+        "rarity": 30,
+        "spawnTime":{
+                "time": "15:00:00",
+                "timeImportance": 50},
+        "spawnWeather":{
+                "temperature": 20,
+                "temperatureImportance": 50,
+                "rain": 1,
+                "sun": 50},
+        "spawnLocation":{
+                "height": 100,
+                "heightImportance": 10,
+                "forestImportance": 90,
+                "townImportance": 1,
+                "waterImportance": 50}
+        },
+"4" : {"name": "rareTiger",
+        "rarity": 90,
+        "spawnTime":{
+                "time": "12:00:00",
+                "timeImportance": 1},
+        "spawnWeather":{
+                "temperature": 20,
+                "temperatureImportance": 1,
+                "rain": 1,
+                "sun": 1},
+        "spawnLocation":{
+                "height": 100,
+                "heightImportance": 10,
+                "forestImportance": 90,
+                "townImportance": 1,
+                "waterImportance": 10}
+        },
+"5" : {"name": "crazyHuman",
+        "rarity": 30,
+        "spawnTime":{
+                "time": "24:00:00",
+                "timeImportance": 50},
+        "spawnWeather":{
+                "temperature": 20,
+                "temperatureImportance": 1,
+                "rain": 1,
+                "sun": 1},
+        "spawnLocation":{
+                "height": 300,
+                "heightImportance": 1,
+                "forestImportance": 1,
+                "townImportance": 99,
+                "waterImportance": 1}
+        }}
+
+
+        
+        
+                
+        
