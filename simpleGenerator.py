@@ -56,13 +56,13 @@ def walk(x1,y1,x2,y2,steps):
     currY = y1;
     while (distance > 0.0):
         point = Point(currX,currY)
-        print "point: %s,%s" % (str(point.x),str(point.y)) 
+        print "point: %s,%s" % (str(point.y),str(point.x)) 
         landuse = ''
         for i in range(0,len(polygonsGeo)):
             polygon = shape(polygonsGeo[i])
             if polygon.contains(point):
                 print 'Found containing polygon:', polygonsLanduse[i]
-                landuse += str(polygonsLanduse[i])
+                landuse += str(polygonsLanduse[i])+", "
         mapData.append({
             'lat': currY,
             'lng': currX,
@@ -78,6 +78,17 @@ def walk(x1,y1,x2,y2,steps):
             polygon = shape(polygonsGeo[i])
             if polygon.contains(point):
                 print 'Found containing polygon:', polygonsLanduse[i]
+def updateMap(locationData):
+    tiles = deg2num(locationData["lat"],locationData["lng"],locationData["zoom"])
+    request = Request('http://vector.mapzen.com/osm/landuse/' + str(locationData["zoom"]) + '/' +str(tiles[0])+'/'+str(tiles[1])+'.json?api_key=vector-tiles-vx5RUiN') 
+    try:
+        response = urlopen(request)
+        with open(DATA_FILE, 'w') as f:
+           json.dump(json.load(response), f, indent=2)
+        createPolygons(open("data.json"))
+    except URLError, e:
+        print 'Got an error code:', e
+    
 def main():
     global path
     full_path = os.path.realpath(__file__)
@@ -87,43 +98,27 @@ def main():
         "height": 100.0,
         "time": "12:00:00",
         "temperature": 20.0,
-        "rain": 0.0,
-        "sun": 50.0,
-        "forest": 20.0,
-        "town": 80.0,
-        "water": 1.0}
-    zoom = 9
-    #tiles = deg2num(locationData["lat"],locationData["lng"],zoom)
-    #request = Request('http://vector.mapzen.com/osm/landuse/' + str(zoom) + '/' +str(tiles[0])+'/'+str(tiles[1])+'.json?api_key=vector-tiles-vx5RUiN')
-    
-    try:
-        #response = urlopen(request)
-        #with open(DATA_FILE, 'w') as f:
-         #   json.dump(json.load(response), f, indent=2)
-        createPolygons(open("data.json"))
-        points = [Point(locationData["lng"],locationData["lat"]),Point(-87.88130,42.2750),Point(-87.88130,42.2749),Point(-87.88125,42.2750)]
-        for point in points:
-            print "point: %s,%s" % (str(point.x),str(point.y))
-            for i in range(0,len(polygonsGeo)):
-                polygon = shape(polygonsGeo[i])
-                if polygon.contains(point):
-                    print 'Found containing polygon:', polygonsLanduse[i]
-        walk(locationData["lng"],locationData["lat"],-87.88530,42.2750,10)
-            
-    except URLError, e:
-        print 'No kittez. Got an error code:', e
-    
+        "zoom": 9}
     while True:
         userInput = raw_input("What to do?")
         if userInput == "start":
             simulate(locationData)
         else:
-            if re.match("[a-z]* [0-9.]",userInput):
                 data = re.split(" ",userInput)[0]
                 if(data == "time"):
                     locationData["time"] =  re.split(" ",userInput)[1]
                 elif data == "walk":
-                    print "hi"
+                    strPoint = re.split(" ",userInput)[1]
+                    walk(locationData["lng"],locationData["lat"],float(re.split(",",strPoint)[1]),float(re.split(",",strPoint)[0]),locationData["zoom"])
+                elif data == "example":
+                    walk(locationData["lng"],locationData["lat"],-87.8662583951751,42.26833512994285,locationData["zoom"])
+                elif data == "updateMap":
+                    updateMap(locationData)
+                elif data == "loadLocalMap":
+                    print "loadingMap..."
+                    createPolygons(open("data.json"))
+                elif data == "zoom":
+                    locationData[data] = int(re.split(" ",userInput)[1])
                 else:
                     value = float(re.split(" ",userInput)[1])
                     if data in locationData.keys():
