@@ -48,6 +48,7 @@ def createPolygons(polys):
         polygonsGeo.append(features[i]["geometry"])
         polygonsLanduse.append(features[i]["properties"]["kind"])
 def walk(x2,y2,steps,locationData):
+    #should not have used x and y
     x1 = locationData["lng"]
     y1 = locationData["lat"]
     distance = math.sqrt(pow(x1-x2,2)+pow(y1-y2,2))
@@ -67,11 +68,11 @@ def walk(x2,y2,steps,locationData):
         for i in range(0,len(polygonsGeo)):
             try:
                 polygon = shape(polygonsGeo[i])
-                if polygon.contains(point):
+                if polygon.contains(point) and str(polygonsLanduse[i]) not in landuse.split(", "):
                     landuse += str(polygonsLanduse[i])+", "
                     spawns.append(getSpawn(polygonsLanduse[i],locationData["time"],locationData["weather"]))               
-            except Exception, e:
-                i = i
+            except Exception, e: #throws Topology Exceptions, dunno how to handle it
+                i = i 
         print "Landuse: %s" % landuse
         if len(spawns) == 0:
             spawns.append("16")
@@ -89,17 +90,25 @@ def walk(x2,y2,steps,locationData):
     with open(MAPDATA_FILE, 'w') as f:
             json.dump(mapData, f, indent=2)
     return encounters
+#downloads map from mapzen and overwries old
 def updateMap(locationData):
-    tiles = deg2num(locationData["lat"],locationData["lng"],locationData["zoom"])
-    request = Request('http://vector.mapzen.com/osm/landuse/' + str(locationData["zoom"]) + '/' +str(tiles[0])+'/'+str(tiles[1])+'.json?api_key=vector-tiles-vx5RUiN') 
-    try:
-        response = urlopen(request)
-        with open(DATA_FILE, 'w') as f:
-           json.dump(json.load(response), f, indent=2)
-        createPolygons(open("data.json"))
-        print "map updated"
-    except URLError, e:
-        print 'Got an error code:', e
+    global polygonsGeo,polygonsLanduse
+    polygonsGeo = []
+    polygonsLanduse = []
+    for i in locationData["zoom"].split(","):
+        tiles = deg2num(locationData["lat"],locationData["lng"],int(i))
+        request = Request('http://vector.mapzen.com/osm/landuse/' + i + '/' +str(tiles[0])+'/'+str(tiles[1])+'.json?api_key=vector-tiles-vx5RUiN') 
+        try:
+            response = urlopen(request)
+            if(len(locationData["zoom"].split(",")) == 1):      #makes a local copy if we only one zoom is used
+                with open(DATA_FILE, 'w') as f:
+                    json.dump(json.load(response), f, indent=2)
+            createPolygons(response)
+            print "map updated"
+        except URLError, e:
+            print 'Got an error code:', e
+
+#walks the route and prints spawned monsters
 def route(locationData,name):
     if name not in routes.keys():
         print "Route not found"
@@ -133,7 +142,7 @@ def main():
         "time": "12:00:00",
         "weather": "sun",
         "landuse": "aerodrome",
-        "zoom": 9}
+        "zoom": "9"}
     while True:
         userInput = raw_input("What to do?")
         if userInput == "start":
@@ -155,7 +164,7 @@ def main():
                     print "loadingMap..."
                     createPolygons(open("data.json"))
                 elif data == "zoom":
-                    locationData[data] = int(re.split(" ",userInput)[1])
+                    locationData[data] = re.split(" ",userInput)[1]
                 else:
                     value = float(re.split(" ",userInput)[1])
                     if data in locationData.keys():

@@ -12,7 +12,8 @@ load a map before walking - http://127.0.0.1:8000/
 - "route x" walk route x (names in routes.json)
 - "loadLocalMap" loads last downloaded map
 - "walk lat,lng,x" walks to lat,lng in x steps
-- "[zoom,lat,lng...] x" sets variable to x 
+- "[lat,lng...] x" sets variable to x 
+- "zoom x,y,..." sets zooms to use (default is 9)
 
 ### toDo List
 - [x] contact mapzen api
