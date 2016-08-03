@@ -113,12 +113,16 @@ def route(locationData,name):
     if name not in routes.keys():
         print "Route not found"
         return
-    locationData["lat"] = routes[name][0][0]
-    locationData["lng"] = routes[name][0][1]
+    if isinstance(routes[name],basestring):
+        route = json.load(open(path+routes[name]))
+    else:
+        route = routes[name]
+    locationData["lat"] = route[0][0]
+    locationData["lng"] = route[0][1]
     updateMap(locationData)
     spawns = {}
-    for i in range(1, len(routes[name])):
-        spawnLoc = walk(routes[name][i][1],routes[name][i][0],routes[name][i][2],locationData)
+    for i in range(1, len(route)):
+        spawnLoc = walk(route[i][1],route[i][0],route[i][2],locationData)
         for spawn in spawnLoc:
             if spawn in spawns:
                 spawns[spawn] += 1

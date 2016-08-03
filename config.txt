@@ -1,1 +1,0 @@
-{"googleAPI": "AIzaSyAdjrj6D7haGRvObZEfhEgTqV6TlNKl4xk","mapzenVectorTilesAPI": ""}
