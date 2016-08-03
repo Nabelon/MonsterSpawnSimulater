@@ -95,15 +95,22 @@ def updateMap(locationData):
     global polygonsGeo,polygonsLanduse
     polygonsGeo = []
     polygonsLanduse = []
-    for i in locationData["zoom"].split(","):
+    try:    #get Water with zoom 9
+        tiles = deg2num(locationData["lat"],locationData["lng"],9)
+        requestWater = Request('http://vector.mapzen.com/osm/water/' + "9" + '/' +str(tiles[0])+'/'+str(tiles[1])+'.json?api_key=vector-tiles-vx5RUiN') 
+        responseWater = urlopen(requestWater)
+        createPolygons(responseWater)
+    except URLError, e:
+        print 'Got an error code:', e
+    for i in locationData["zoom"].split(","): #get Landuse with selected zooms
         tiles = deg2num(locationData["lat"],locationData["lng"],int(i))
-        request = Request('http://vector.mapzen.com/osm/landuse/' + i + '/' +str(tiles[0])+'/'+str(tiles[1])+'.json?api_key=vector-tiles-vx5RUiN') 
+        requestLanduse = Request('http://vector.mapzen.com/osm/landuse/' + i + '/' +str(tiles[0])+'/'+str(tiles[1])+'.json?api_key=vector-tiles-vx5RUiN') 
         try:
-            response = urlopen(request)
+            responseLanduse = urlopen(requestLanduse)
             #if(len(locationData["zoom"].split(",")) == 1):      #makes a local copy if we only one zoom is used
             #    with open(DATA_FILE, 'w') as f:
             #        json.dump(json.load(response), f, indent=2)
-            createPolygons(response)
+            createPolygons(responseLanduse)
             print "map updated"
         except URLError, e:
             print 'Got an error code:', e

@@ -21,7 +21,7 @@ load a map before walking - http://127.0.0.1:8000/
 - [ ] contact spawn Algorithm
 - [ ] get weather data
 - [ ] show monster on the map
-- [ ] selection of paths
+- [x] selection of paths
 - [ ] analysis of paths
 
 
