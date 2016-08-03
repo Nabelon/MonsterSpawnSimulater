@@ -52,12 +52,14 @@ def walk(x2,y2,steps,locationData):
     y1 = locationData["lat"]
     distance = math.sqrt(pow(x1-x2,2)+pow(y1-y2,2))
     stepDistance = distance / steps
-    xAdd = ((x2-x1)/(math.fabs(y1-y2)+math.fabs(x1-x2))) * stepDistance
-    yAdd = ((y2-y1)/(math.fabs(y1-y2)+math.fabs(x1-x2))) * stepDistance
-    currX = x1;
-    currY = y1;
+    xAdd = (x2-x1) / steps
+    yAdd = (y2-y1) / steps
+    currX = x1
+    currY = y1
     encounters = []
     for i in range(0,steps):
+        currX = x1 + xAdd * i
+        currY = y1 + yAdd * i
         point = Point(currX,currY)
         print "point: %s,%s" % (str(point.y),str(point.x)) 
         landuse = ''
@@ -79,8 +81,6 @@ def walk(x2,y2,steps,locationData):
             spawn =  random.choice(spawns)
             print monsters[spawn]["name"]
             encounters.append(spawn)
-        currX += xAdd
-        currY += yAdd
             
     locationData["lat"] = y2
     locationData["lng"] = x2

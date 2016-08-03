@@ -1,2 +1,4 @@
 /data.json
-/mapdata.json/*.pyc
+
+/mapdata.json
+*.pyc
