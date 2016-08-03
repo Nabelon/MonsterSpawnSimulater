@@ -100,9 +100,9 @@ def updateMap(locationData):
         request = Request('http://vector.mapzen.com/osm/landuse/' + i + '/' +str(tiles[0])+'/'+str(tiles[1])+'.json?api_key=vector-tiles-vx5RUiN') 
         try:
             response = urlopen(request)
-            if(len(locationData["zoom"].split(",")) == 1):      #makes a local copy if we only one zoom is used
-                with open(DATA_FILE, 'w') as f:
-                    json.dump(json.load(response), f, indent=2)
+            #if(len(locationData["zoom"].split(",")) == 1):      #makes a local copy if we only one zoom is used
+            #    with open(DATA_FILE, 'w') as f:
+            #        json.dump(json.load(response), f, indent=2)
             createPolygons(response)
             print "map updated"
         except URLError, e:
