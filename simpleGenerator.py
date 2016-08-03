@@ -68,20 +68,22 @@ def walk(x2,y2,steps,locationData):
             try:
                 polygon = shape(polygonsGeo[i])
                 if polygon.contains(point):
-                    print 'Found containing polygon:', polygonsLanduse[i]
                     landuse += str(polygonsLanduse[i])+", "
                     spawns.append(getSpawn(polygonsLanduse[i],locationData["time"],locationData["weather"]))               
             except Exception, e:
-                print 'Got an polygon error code:', e
+                i = i
+        print "Landuse: %s" % landuse
+        if len(spawns) == 0:
+            spawns.append("16")
+        spawn =  random.choice(spawns)
+        print monsters[spawn]["name"]
+        encounters.append(spawn)
         mapData.append({
-                    'lat': currY,
-                    'lng': currX,
-                    'landuse': landuse})
-        if len(spawns) > 0:
-            spawn =  random.choice(spawns)
-            print monsters[spawn]["name"]
-            encounters.append(spawn)
-            
+            'lat': currY,
+            'lng': currX,
+            'landuse': landuse,
+            'id': spawn,
+            'name': monsters[spawn]["name"]})
     locationData["lat"] = y2
     locationData["lng"] = x2
     with open(MAPDATA_FILE, 'w') as f:

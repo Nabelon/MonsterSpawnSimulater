@@ -114,10 +114,12 @@
                 map.setZoom(16);
           }
           while(count < data.length){
+                  image = getImage(data[count])
                   var marker = new google.maps.Marker({
                     map: map,
                     position: {lat: data[count].lat, lng: data[count].lng},
-                    title: data[count].landuse
+                    title: data[count].landuse,
+                    icon: image
                     });
                   var line = [
                     {lat:data[count-1].lat,lng:data[count-1].lng},
