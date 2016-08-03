@@ -105,8 +105,17 @@ def route(locationData,name):
     locationData["lat"] = routes[name][0][0]
     locationData["lng"] = routes[name][0][1]
     updateMap(locationData)
+    spawns = {}
     for i in range(1, len(routes[name])):
-        walk(routes[name][i][1],routes[name][i][0],routes[name][i][2],locationData)
+        spawnLoc = walk(routes[name][i][1],routes[name][i][0],routes[name][i][2],locationData)
+        for spawn in spawnLoc:
+            if spawn in spawns:
+                spawns[spawn] += 1
+            else:
+                spawns[spawn] = 1
+    print "Results:"
+    for id in spawns.keys():
+        print "%s: %d" % (monsters[id]["name"],spawns[id]) 
 def main():
     global path, encounters, monsters, routes
     full_path = os.path.realpath(__file__)

@@ -166,14 +166,6 @@
           zoom: 4
         });
 
-        var legend = document.createElement('div');
-        legend.id = 'legend';
-        var content = [];
-        content.push('<h3>Hide Pokemon</h3>');
-        content.push('<div id="legend-list"></div>');
-        legend.innerHTML = content.join('');
-        legend.index = 1;
-        map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
 
         setInterval(refreshData, 1000);
       }

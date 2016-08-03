@@ -1,6 +1,7 @@
 ## Simulater for testing spawn algorithms of monsters
 ### How to use:
 start faster.bat and pythonServer.bat
+
 load a map bevore walking
 ### commands:
 - "updateMap" downloads mapData from mapzen and loads it
