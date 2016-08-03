@@ -9,6 +9,7 @@ import os
 import math
 import matplotlib.path as mplPath
 import numpy as np
+import random
 from shapely.geometry import shape, Point
 from urllib2 import Request, urlopen, URLError
 
@@ -20,22 +21,21 @@ MAPDATA_FILE = "mapdata.json"
 mapData = []
 polygonsGeo = []
 polygonsLanduse = []
-def simulate(data):
-    print data    
-    ftr = [3600,60,1]
-    time = sum([a*b for a,b in zip(ftr, map(int,data["time"].split(':')))])
-    monsters = json.load(
-        open(path + '/monsters.json'))
-    for i in range(1,len(monsters)):
-        monster = monsters[str(i)]
-        spawnChanceAbs = 0
-        mTime = sum([a*b for a,b in zip(ftr, map(int,monster["spawnTime"]["time"].split(':')))])
-        spawnChanceAbs += 100 - min(100,math.pow(pow((max(abs(mTime - time),3600)/3600.0),2.0),(monster["spawnTime"]["timeImportance"]/30.0))-1)
-        spawnChanceAbs += 100 - min(100,math.pow(pow((max(abs(monster["spawnWeather"]["temperature"] - data["temperature"]),3.0)/3.0),3.0),(monster["spawnWeather"]["temperatureImportance"]/30.0))-1)
-        print pow((max(abs(monster["spawnWeather"]["temperature"] - data["temperature"]),3.0)/3.0),2.0)
-        print math.pow(pow((max(abs(monster["spawnWeather"]["temperature"] - data["temperature"]),3.0)/3.0),3),(monster["spawnWeather"]["temperatureImportance"]/30.0))
-        print spawnChanceAbs
-        print "-------------------------"
+encounters = {}
+monsters = {}
+routes = {}
+def getSpawn(landuse,iTime,weather):
+    if iTime in range(0,5) or iTime in range(22,24):
+        time = "night"
+    elif iTime in range(5,11):
+        time = "morning"
+    elif iTime in range(11,17):
+        time = "day"
+    else:
+        time = "evening"
+    spawns = encounters[landuse][time][weather]
+    return random.choice(spawns)
+    
 def deg2num(lat_deg, lon_deg, zoom):
   lat_rad = math.radians(lat_deg)
   n = 2.0 ** zoom
@@ -47,37 +47,46 @@ def createPolygons(polys):
     for i in range(0,len(features)):
         polygonsGeo.append(features[i]["geometry"])
         polygonsLanduse.append(features[i]["properties"]["kind"])
-def walk(x1,y1,x2,y2,steps):
+def walk(x2,y2,steps,locationData):
+    x1 = locationData["lng"]
+    y1 = locationData["lat"]
     distance = math.sqrt(pow(x1-x2,2)+pow(y1-y2,2))
     stepDistance = distance / steps
     xAdd = ((x2-x1)/(math.fabs(y1-y2)+math.fabs(x1-x2))) * stepDistance
     yAdd = ((y2-y1)/(math.fabs(y1-y2)+math.fabs(x1-x2))) * stepDistance
     currX = x1;
     currY = y1;
-    while (distance > 0.0):
+    encounters = []
+    for i in range(0,steps):
         point = Point(currX,currY)
         print "point: %s,%s" % (str(point.y),str(point.x)) 
         landuse = ''
+        spawns = []
         for i in range(0,len(polygonsGeo)):
-            polygon = shape(polygonsGeo[i])
-            if polygon.contains(point):
-                print 'Found containing polygon:', polygonsLanduse[i]
-                landuse += str(polygonsLanduse[i])+", "
+            try:
+                polygon = shape(polygonsGeo[i])
+                if polygon.contains(point):
+                    print 'Found containing polygon:', polygonsLanduse[i]
+                    landuse += str(polygonsLanduse[i])+", "
+                    spawns.append(getSpawn(polygonsLanduse[i],locationData["time"],locationData["weather"]))               
+            except Exception, e:
+                print 'Got an polygon error code:', e
         mapData.append({
-            'lat': currY,
-            'lng': currX,
-            'landuse': landuse})
+                    'lat': currY,
+                    'lng': currX,
+                    'landuse': landuse})
+        if len(spawns) > 0:
+            spawn =  random.choice(spawns)
+            print monsters[spawn]["name"]
+            encounters.append(spawn)
         currX += xAdd
         currY += yAdd
-        distance -= stepDistance
+            
+    locationData["lat"] = y2
+    locationData["lng"] = x2
     with open(MAPDATA_FILE, 'w') as f:
             json.dump(mapData, f, indent=2)
-    point = Point(currX,currY)
-    print "point: %s,%s" % (str(point.x),str(point.y))  
-    for i in range(0,len(polygonsGeo)):
-            polygon = shape(polygonsGeo[i])
-            if polygon.contains(point):
-                print 'Found containing polygon:', polygonsLanduse[i]
+    return encounters
 def updateMap(locationData):
     tiles = deg2num(locationData["lat"],locationData["lng"],locationData["zoom"])
     request = Request('http://vector.mapzen.com/osm/landuse/' + str(locationData["zoom"]) + '/' +str(tiles[0])+'/'+str(tiles[1])+'.json?api_key=vector-tiles-vx5RUiN') 
@@ -89,16 +98,30 @@ def updateMap(locationData):
         print "map updated"
     except URLError, e:
         print 'Got an error code:', e
-    
+def route(locationData,name):
+    if name not in routes.keys():
+        print "Route not found"
+        return
+    locationData["lat"] = routes[name][0][0]
+    locationData["lng"] = routes[name][0][1]
+    updateMap(locationData)
+    for i in range(1, len(routes[name])):
+        walk(routes[name][i][1],routes[name][i][0],routes[name][i][2],locationData)
 def main():
-    global path
+    global path, encounters, monsters, routes
     full_path = os.path.realpath(__file__)
     (path, filename) = os.path.split(full_path)
+    encounters = json.load(
+        open(path + '/encounters.json'))
+    monsters = json.load(
+        open(path + '/pokemon.json'))
+    routes = json.load(
+        open(path + '/routes.json'))
     locationData = {"lat": 42.252306,
         "lng": -87.820463,
-        "height": 100.0,
         "time": "12:00:00",
-        "temperature": 20.0,
+        "weather": "sun",
+        "landuse": "aerodrome",
         "zoom": 9}
     while True:
         userInput = raw_input("What to do?")
@@ -106,13 +129,15 @@ def main():
             simulate(locationData)
         else:
                 data = re.split(" ",userInput)[0]
-                if(data == "time"):
-                    locationData["time"] =  re.split(" ",userInput)[1]
+                if(data == "time" or data == "weather"):
+                    locationData[data] =  re.split(" ",userInput)[1]
                 elif data == "walk":
                     strValues = re.split(" ",userInput)[1]
                     walk(locationData["lng"],locationData["lat"],float(re.split(",",strValues)[1]),float(re.split(",",strValues)[0]),int(re.split(",",strValues)[2]))
                 elif data == "example":
-                    walk(locationData["lng"],locationData["lat"],-87.8662583951751,42.26833512994285,locationData["zoom"])
+                    walk(-87.8662583951751,42.26833512994285,locationData["zoom"],locationData)
+                elif data == "route":
+                    route(locationData, re.split(" ",userInput)[1])
                 elif data == "updateMap":
                     updateMap(locationData)
                 elif data == "loadLocalMap":
