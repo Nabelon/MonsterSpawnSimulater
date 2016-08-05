@@ -18,12 +18,12 @@ load a map before walking - http://127.0.0.1:8000/
 ### toDo List
 - [x] contact mapzen api
 - [x] show a map
-- [ ] contact spawn Algorithm
+- [x] contact spawn Algorithm
 - [ ] get weather data
-- [ ] show monster on the map
+- [x] show monster on the map
 - [x] selection of paths
 - [ ] analysis of paths
-
+- [ ] analysis of spawnAlgorithm
 
 encounters.json from https://github.com/pkmn-world/test-spawner
 pokemon.json from https://gist.github.com/shri/9754992

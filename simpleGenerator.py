@@ -19,6 +19,8 @@ DATA_FILE = 'data.json'
 DATA = []
 MAPDATA_FILE = "mapdata.json"
 mapData = []
+MONSTER_SPAWN_DATA_FILE = "\simpleSpawnAlgorithm\pokemonSpawnData.json"
+monsterSpawnData = {}
 polygonsGeo = []
 polygonsLanduse = []
 encounters = {}
@@ -47,6 +49,29 @@ def createPolygons(polys):
     for i in range(0,len(features)):
         polygonsGeo.append(features[i]["geometry"])
         polygonsLanduse.append(features[i]["properties"]["kind"])
+def getMonster(landuse,iTime,weather):
+    if iTime in range(0,5) or iTime in range(22,24):
+        time = "night"
+    elif iTime in range(5,11):
+        time = "morning"
+    elif iTime in range(11,17):
+        time = "day"
+    else:
+        time = "evening"
+    if len(landuse) == 0:
+        return "16"
+    encountersL = []
+    #get encounters
+    for i in landuse:
+        print i
+        for j in encounters[i][time][weather]:
+            encountersL.append(j)
+    #include rarity
+    lenEncountersL = len(encountersL)
+    for i in range(0,lenEncountersL):
+        for j in range(1,monsterSpawnData[encountersL[i]]["rarity"]):
+            encountersL.append(encountersL[i])
+    return random.choice(encountersL)
 def walk(x2,y2,steps,locationData):
     #should not have used x and y
     x1 = locationData["lng"]
@@ -63,26 +88,23 @@ def walk(x2,y2,steps,locationData):
         currY = y1 + yAdd * i
         point = Point(currX,currY)
         print "point: %s,%s" % (str(point.y),str(point.x)) 
-        landuse = ''
+        landuse = []
         spawns = []
         for i in range(0,len(polygonsGeo)):
             try:
                 polygon = shape(polygonsGeo[i])
-                if polygon.contains(point) and str(polygonsLanduse[i]) not in landuse.split(", "):
-                    landuse += str(polygonsLanduse[i])+", "
-                    spawns.append(getSpawn(polygonsLanduse[i],locationData["time"],locationData["weather"]))               
+                if polygon.contains(point) and polygonsLanduse[i] not in landuse:
+                    landuse.append(polygonsLanduse[i])             
             except Exception, e: #throws Topology Exceptions, dunno how to handle it
                 i = i 
         print "Landuse: %s" % landuse
-        if len(spawns) == 0:
-            spawns.append("16")
-        spawn =  random.choice(spawns)
+        spawn =  getMonster(landuse,locationData["time"],locationData["weather"])
         print monsters[spawn]["name"]
         encounters.append(spawn)
         mapData.append({
             'lat': currY,
             'lng': currX,
-            'landuse': landuse,
+            'landuse': str(landuse),
             'id': spawn,
             'name': monsters[spawn]["name"]})
     locationData["lat"] = y2
@@ -139,15 +161,17 @@ def route(locationData,name):
     for id in spawns.keys():
         print "%s: %d" % (monsters[id]["name"],spawns[id]) 
 def main():
-    global path, encounters, monsters, routes
+    global path, encounters, monsters, routes,monsterSpawnData
     full_path = os.path.realpath(__file__)
     (path, filename) = os.path.split(full_path)
     encounters = json.load(
-        open(path + '/encounters.json'))
+        open(path + 'simpleSpawnAlgorithm\encounters.json'))
     monsters = json.load(
         open(path + '/pokemon.json'))
     routes = json.load(
         open(path + '/routes.json'))
+    monsterSpawnData = json.load(
+        open(path + MONSTER_SPAWN_DATA_FILE))
     locationData = {"lat": 42.252306,
         "lng": -87.820463,
         "time": "12:00:00",
