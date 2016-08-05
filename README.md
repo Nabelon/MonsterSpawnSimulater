@@ -14,6 +14,13 @@ load a map before walking - http://127.0.0.1:8000/
 - "walk lat,lng,x" walks to lat,lng in x steps
 - "[lat,lng...] x" sets variable to x 
 - "zoom x,y,..." sets zooms to use (default is 9)
+- "overallTest rounds;time;weather;routes" overallTest (takes long)
+
+### command examples:
+- "zoom 7,9,11" use 3 zoom layers
+- route NY walks the NewYork route
+- "overallTest 1;day;sun,rain;0
+- "overallTest 1;0;0;0 (takes very long)
 
 ### toDo List
 - [x] contact mapzen api

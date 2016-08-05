@@ -6,6 +6,7 @@ import argparse
 import time
 import re
 import os
+import sys
 import math
 import matplotlib.path as mplPath
 import numpy as np
@@ -160,12 +161,51 @@ def route(locationData,name):
     print "Results:"
     for id in spawns.keys():
         print "%s: %d" % (monsters[id]["name"],spawns[id]) 
+    return spawns
+#runs all routes 
+def overallTest(locationData, args):
+    splitA = args.split(";")
+    rounds = int(splitA[0])
+    if(splitA[1] == "0"):
+        times = ["morning","day","evening","night"]
+    else:
+        times = splitA[1].split(",")
+    if(splitA[2] == "0"):
+        weathers = ["cloud","sun","rain"]
+    else:
+        weathers = splitA[2].split(",")
+    if(splitA[3] == "0"):
+        routesL = routes.keys()
+    else:
+        routesL = splitA[3].split(",")
+    spawns = {}
+    for r in routesL:
+        print "Route: %s" % r
+        for j in times:
+            print "Time: %s" % j
+            locationData["time"] = j
+            for p in weathers:
+                print "Weather: %s" % p
+                locationData["weather"] = p
+                for i in range(0,rounds):
+                    sys.stdout = open(os.devnull, 'w')
+                    spawnsRoute = route(locationData,r)
+                    sys.stdout = sys.__stdout__
+                    for k in spawnsRoute:
+                        if k in spawns.keys():
+                            spawns[k] += spawnsRoute[k]
+                        else:
+                            spawns[k] = spawnsRoute[k]
+    print "Results:"
+    for id in spawns.keys():
+        print "%s: %d" % (monsters[id]["name"],spawns[id]) 
+    print "Different Pokes:  %d" % len(spawns)
 def main():
     global path, encounters, monsters, routes,monsterSpawnData
     full_path = os.path.realpath(__file__)
     (path, filename) = os.path.split(full_path)
     encounters = json.load(
-        open(path + 'simpleSpawnAlgorithm\encounters.json'))
+        open(path + '\simpleSpawnAlgorithm\encounters.json'))
     monsters = json.load(
         open(path + '/pokemon.json'))
     routes = json.load(
@@ -186,6 +226,8 @@ def main():
                 data = re.split(" ",userInput)[0]
                 if(data == "time" or data == "weather"):
                     locationData[data] =  re.split(" ",userInput)[1]
+                elif data == "overallTest":
+                    overallTest(locationData,userInput.split(" ")[1])
                 elif data == "walk":
                     strValues = re.split(" ",userInput)[1]
                     walk(locationData["lng"],locationData["lat"],float(re.split(",",strValues)[1]),float(re.split(",",strValues)[0]),int(re.split(",",strValues)[2]))
